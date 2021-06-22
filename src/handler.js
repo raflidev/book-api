@@ -8,7 +8,7 @@ const addBookHandler = (req, h) => {
 
   const id = nanoid(16);
   const finished = (pageCount === readPage);
-  const createdAt = new Date().toISOString();
+  const insertedAt = new Date().toISOString();
   const updatedAt = new Date().toISOString();
 
   const newBook = {
@@ -22,31 +22,32 @@ const addBookHandler = (req, h) => {
     readPage,
     finished,
     reading,
-    createdAt,
+    insertedAt,
     updatedAt,
   };
-
-  books.push(newBook);
+  if (name !== undefined && readPage < pageCount) {
+    books.push(newBook);
+  }
 
   const isSuccess = books.filter((book) => book.id === id).length > 0;
 
+  if (name === null || name === '' || name === undefined) {
+    const res = h.response({
+      status: 'fail',
+      message: 'Gagal menambahkan buku. Mohon isi nama buku',
+    });
+    res.code(400);
+    return res;
+  }
+  if (readPage > pageCount) {
+    const res = h.response({
+      status: 'fail',
+      message: 'Gagal menambahkan buku. readPage tidak boleh lebih besar dari pageCount',
+    });
+    res.code(400);
+    return res;
+  }
   if (isSuccess) {
-    if (name === null || name === '' || name === undefined) {
-      const res = h.response({
-        status: 'fail',
-        message: 'Gagal menambahkan buku. Mohon isi nama buku',
-      });
-      res.code(400);
-      return res;
-    }
-    if (readPage > pageCount) {
-      const res = h.response({
-        status: 'fail',
-        message: 'Gagal menambahkan buku. readPage tidak boleh lebih besar dari pageCount',
-      });
-      res.code(400);
-      return res;
-    }
     const res = h.response({
       status: 'success',
       message: 'Buku berhasil ditambahkan',
@@ -69,14 +70,24 @@ const addBookHandler = (req, h) => {
 };
 
 const getAllBookHandle = (req, h) => {
+  const dataFilterReading = [];
   const { name, reading, finished } = req.query;
 
+  const data = [];
+  books.forEach((b) => {
+    data.push({
+      id: b.id,
+      name: b.name,
+      publisher: b.publisher,
+    });
+  });
+
   if (name !== undefined) {
-    const filter = books.filter((b) => b.name.toLowerCase().includes(name.toLowerCase()));
+    // const filter = books.filter((b) => b.name.toLowerCase().includes(name.toLowerCase());
+    const filter = books.filter((b) => b.name === name);
     const res = h.response({
-      status: 'success',
       data: {
-        filter,
+        books: filter,
       },
     });
     res.code(200);
@@ -84,11 +95,19 @@ const getAllBookHandle = (req, h) => {
   }
 
   if (reading !== undefined) {
-    const filter = books.filter((b) => b.reading === (reading === '1'));
+    // const filter = books.filter((b) => b.reading === ((reading === '1') || (reading === 1)));
+    const filter = books.filter((b) => b.reading === true);
+    filter.forEach((b) => {
+      dataFilterReading.push({
+        name: b.name,
+        publisher: b.publisher,
+      });
+    });
+    console.log(dataFilterReading);
     const res = h.response({
       status: 'success',
       data: {
-        filter,
+        books: dataFilterReading,
       },
     });
     res.code(200);
@@ -97,10 +116,17 @@ const getAllBookHandle = (req, h) => {
 
   if (finished !== undefined) {
     const filter = books.filter((b) => b.finished === (finished === '1'));
+    const dataFilter = [];
+    filter.forEach((b) => {
+      dataFilter.push({
+        name: b.name,
+        publisher: b.publisher,
+      });
+    });
     const res = h.response({
       status: 'success',
       data: {
-        filter,
+        books: dataFilter,
       },
     });
     res.code(200);
@@ -110,7 +136,7 @@ const getAllBookHandle = (req, h) => {
   const res = h.response({
     status: 'success',
     data: {
-      books,
+      books: data,
     },
   });
   res.code(200);
@@ -153,7 +179,7 @@ const editBookByIdHandler = (req, h) => {
   if (name === undefined) {
     const res = h.response({
       status: 'fail',
-      message: 'Gagal menambahkan buku. Mohon isi nama buku',
+      message: 'Gagal memperbarui buku. Mohon isi nama buku',
     });
     res.code(400);
     return res;
