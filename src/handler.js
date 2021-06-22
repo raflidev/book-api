@@ -25,7 +25,7 @@ const addBookHandler = (req, h) => {
     insertedAt,
     updatedAt,
   };
-  if (name !== undefined && readPage < pageCount) {
+  if (name !== undefined && readPage <= pageCount) {
     books.push(newBook);
   }
 
@@ -70,7 +70,7 @@ const addBookHandler = (req, h) => {
 };
 
 const getAllBookHandle = (req, h) => {
-  const dataFilterReading = [];
+  const dataFilterQuery = [];
   const { name, reading, finished } = req.query;
 
   const data = [];
@@ -83,11 +83,18 @@ const getAllBookHandle = (req, h) => {
   });
 
   if (name !== undefined) {
-    // const filter = books.filter((b) => b.name.toLowerCase().includes(name.toLowerCase());
-    const filter = books.filter((b) => b.name === name);
+    const filter = books.filter((b) => b.name.toLowerCase().includes(name.toLowerCase()));
+    filter.forEach((b) => {
+      dataFilterQuery.push({
+        id: b.id,
+        name: b.name,
+        publisher: b.publisher,
+      });
+    });
     const res = h.response({
+      status: 'success',
       data: {
-        books: filter,
+        books: dataFilterQuery,
       },
     });
     res.code(200);
@@ -95,19 +102,18 @@ const getAllBookHandle = (req, h) => {
   }
 
   if (reading !== undefined) {
-    // const filter = books.filter((b) => b.reading === ((reading === '1') || (reading === 1)));
-    const filter = books.filter((b) => b.reading === true);
+    const filter = books.filter((b) => b.reading === (reading === '1'));
     filter.forEach((b) => {
-      dataFilterReading.push({
+      dataFilterQuery.push({
+        id: b.id,
         name: b.name,
         publisher: b.publisher,
       });
     });
-    console.log(dataFilterReading);
     const res = h.response({
       status: 'success',
       data: {
-        books: dataFilterReading,
+        books: dataFilterQuery,
       },
     });
     res.code(200);
@@ -119,6 +125,7 @@ const getAllBookHandle = (req, h) => {
     const dataFilter = [];
     filter.forEach((b) => {
       dataFilter.push({
+        id: b.id,
         name: b.name,
         publisher: b.publisher,
       });
