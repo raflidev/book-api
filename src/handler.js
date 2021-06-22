@@ -70,80 +70,36 @@ const addBookHandler = (req, h) => {
 };
 
 const getAllBookHandle = (req, h) => {
-  const dataFilterQuery = [];
   const { name, reading, finished } = req.query;
 
+  let dataFilterQuery = [];
   const data = [];
+  const dataFilter = [];
+
+  if (name !== undefined) {
+    dataFilterQuery = books.filter((b) => b.name.toLowerCase().includes(name.toLowerCase()));
+  }
+
+  if (reading !== undefined) {
+    dataFilterQuery = books.filter((b) => b.reading === (reading === '1'));
+  }
+
+  if (finished !== undefined) {
+    dataFilterQuery = books.filter((b) => b.finished === (finished === '1'));
+  }
+
   books.forEach((b) => {
-    data.push({
+    ((name === undefined && reading === undefined && finished === undefined) ? data : dataFilterQuery).push({
       id: b.id,
       name: b.name,
       publisher: b.publisher,
     });
   });
 
-  if (name !== undefined) {
-    const filter = books.filter((b) => b.name.toLowerCase().includes(name.toLowerCase()));
-    filter.forEach((b) => {
-      dataFilterQuery.push({
-        id: b.id,
-        name: b.name,
-        publisher: b.publisher,
-      });
-    });
-    const res = h.response({
-      status: 'success',
-      data: {
-        books: dataFilterQuery,
-      },
-    });
-    res.code(200);
-    return res;
-  }
-
-  if (reading !== undefined) {
-    const filter = books.filter((b) => b.reading === (reading === '1'));
-    filter.forEach((b) => {
-      dataFilterQuery.push({
-        id: b.id,
-        name: b.name,
-        publisher: b.publisher,
-      });
-    });
-    const res = h.response({
-      status: 'success',
-      data: {
-        books: dataFilterQuery,
-      },
-    });
-    res.code(200);
-    return res;
-  }
-
-  if (finished !== undefined) {
-    const filter = books.filter((b) => b.finished === (finished === '1'));
-    const dataFilter = [];
-    filter.forEach((b) => {
-      dataFilter.push({
-        id: b.id,
-        name: b.name,
-        publisher: b.publisher,
-      });
-    });
-    const res = h.response({
-      status: 'success',
-      data: {
-        books: dataFilter,
-      },
-    });
-    res.code(200);
-    return res;
-  }
-
   const res = h.response({
     status: 'success',
     data: {
-      books: data,
+      books: (name === undefined && reading === undefined && finished === undefined) ? data : dataFilter,
     },
   });
   res.code(200);
